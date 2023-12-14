@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "FastAPI",
+            "type": "python",
+            "request": "launch",
+            "module": "uvicorn",
+            "cwd": "${workspaceFolder}",
+            "args": ["main:app", "--reload", "--port", "8001"],
+            "jinja": true,
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Ejecutar archivo actual",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["api_clients"],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        }
+    ]
+}
