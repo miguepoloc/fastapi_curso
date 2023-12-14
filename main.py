@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Path, Query, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel, Field
@@ -84,21 +85,27 @@ def login(user: User):
 
 @app.get('/movies', tags=['movies'], response_model=List[Movie], status_code=200, dependencies=[Depends(JWTBearer())])
 def get_movies() -> List[Movie]:
-    return JSONResponse(status_code=200, content=movies)
+    db = Session()
+    result = db.query(MovieModel).all()
+    return JSONResponse(status_code=200, content=jsonable_encoder(result))
 
 
 @app.get('/movies/{id}', tags=['movies'], response_model=Movie)
 def get_movie(id: int = Path(ge=1, le=2000)) -> Movie:
-    for item in movies:
-        if item["id"] == id:
-            return JSONResponse(content=item)
-    return JSONResponse(status_code=404, content=[])
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.id == id).first()
+    if result:
+        return JSONResponse(status_code=200, content=jsonable_encoder(result))
+    return JSONResponse(status_code=404, content={"message": "No se ha encontrado la película"})
 
 
 @app.get('/movies/', tags=['movies'], response_model=List[Movie])
 def get_movies_by_category(category: str = Query(min_length=5, max_length=15)) -> List[Movie]:
-    data = [item for item in movies if item['category'] == category]
-    return JSONResponse(content=data)
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.category == category).all()
+    if result:
+        return JSONResponse(status_code=200, content=jsonable_encoder(result))
+    return JSONResponse(status_code=404, content={"message": "No se ha encontrado la película con esa categoría"})
 
 
 @app.post('/movies', tags=['movies'], response_model=dict, status_code=201)
@@ -127,4 +134,5 @@ def delete_movie(id: int) -> dict:
     for item in movies:
         if item["id"] == id:
             movies.remove(item)
+            return JSONResponse(status_code=200, content={"message": "Se ha eliminado la película"})
             return JSONResponse(status_code=200, content={"message": "Se ha eliminado la película"})
